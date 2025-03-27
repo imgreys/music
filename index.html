@@ -1051,7 +1051,7 @@
             });
         }
 
-        // Render 10 albums on home page
+        // Render 10 albums on home page (updated to match songs design)
         function renderHomeAlbums() {
             const albumsGrid = document.getElementById('home-albums-grid');
             albumsGrid.innerHTML = '';
@@ -1061,11 +1061,19 @@
                 albumCard.className = 'item-card';
                 albumCard.dataset.id = album.id;
                 albumCard.innerHTML = `
-                    <img class="item-image" src="${album.cover}" alt="${album.title}">
+                    <div class="item-image-container">
+                        <img class="item-image" src="${album.cover}" alt="${album.title}">
+                        <button class="play-button" data-album-id="${album.id}"><i class="fas fa-play"></i></button>
+                    </div>
                     <div class="item-title">${album.title}</div>
                     <div class="item-subtitle">${album.artist}</div>
                 `;
-                albumCard.addEventListener('click', () => showAlbumDetail(album.id));
+                albumCard.addEventListener('click', (e) => {
+                    // Only show detail if not clicking on play button
+                    if (!e.target.closest('.play-button')) {
+                        showAlbumDetail(album.id);
+                    }
+                });
                 albumsGrid.appendChild(albumCard);
             });
         }
@@ -1100,7 +1108,7 @@
             });
         }
 
-        // Render all albums in the albums grid
+        // Render all albums in the albums grid (updated to match songs design)
         function renderAlbums() {
             const albumsGrid = document.getElementById('albums-grid');
             albumsGrid.innerHTML = '';
@@ -1110,11 +1118,19 @@
                 albumCard.className = 'item-card';
                 albumCard.dataset.id = album.id;
                 albumCard.innerHTML = `
-                    <img class="item-image" src="${album.cover}" alt="${album.title}">
+                    <div class="item-image-container">
+                        <img class="item-image" src="${album.cover}" alt="${album.title}">
+                        <button class="play-button" data-album-id="${album.id}"><i class="fas fa-play"></i></button>
+                    </div>
                     <div class="item-title">${album.title}</div>
                     <div class="item-subtitle">${album.artist}</div>
                 `;
-                albumCard.addEventListener('click', () => showAlbumDetail(album.id));
+                albumCard.addEventListener('click', (e) => {
+                    // Only show detail if not clicking on play button
+                    if (!e.target.closest('.play-button')) {
+                        showAlbumDetail(album.id);
+                    }
+                });
                 albumsGrid.appendChild(albumCard);
             });
         }
@@ -1226,10 +1242,25 @@
 
             // Play buttons (delegated event listener)
             document.addEventListener('click', function(e) {
-                if (e.target.closest('.play-button')) {
+                // Handle song play buttons
+                if (e.target.closest('.play-button[data-index]')) {
                     const button = e.target.closest('.play-button');
                     const index = parseInt(button.dataset.index);
                     playSong(index);
+                }
+                
+                // Handle album play buttons
+                if (e.target.closest('.play-button[data-album-id]')) {
+                    const button = e.target.closest('.play-button');
+                    const albumId = parseInt(button.dataset.albumId);
+                    const album = albumsData.find(a => a.id === albumId);
+                    if (album && album.tracks.length > 0) {
+                        // Play the first track of the album
+                        const songIndex = songsData.findIndex(s => s.id === album.tracks[0].id);
+                        if (songIndex !== -1) {
+                            playSong(songIndex);
+                        }
+                    }
                 }
             });
 
@@ -1356,7 +1387,7 @@
                 playButton.classList.add('playing');
                 fsPlayButton.classList.add('playing');
                 document.querySelectorAll('.play-button').forEach(btn => {
-                    if (parseInt(btn.dataset.index) === currentSongIndex) {
+                    if (btn.dataset.index && parseInt(btn.dataset.index) === currentSongIndex) {
                         btn.classList.add('playing');
                     } else {
                         btn.classList.remove('playing');
