@@ -987,6 +987,7 @@
     let currentSongIndex = 0;
     let isPlaying = false;
     let currentQueue = [];
+    let previousSection = null;
 
     // Initialize the app
     document.addEventListener('DOMContentLoaded', function() {
@@ -1070,9 +1071,10 @@
                 }
             });
             
+            // On home page, clicking album card shows album detail
             albumCard.addEventListener('click', function(e) {
                 if (!e.target.closest('.play-button')) {
-                    showAlbumDetail(parseInt(this.dataset.id));
+                    showAlbumDetail(parseInt(this.dataset.id), 'home');
                 }
             });
             
@@ -1154,9 +1156,10 @@
                 }
             });
             
+            // On albums page, clicking album card shows detail view
             albumCard.addEventListener('click', function(e) {
                 if (!e.target.closest('.play-button')) {
-                    showAlbumDetail(parseInt(this.dataset.id));
+                    showAlbumDetail(parseInt(this.dataset.id), 'albums');
                 }
             });
             
@@ -1165,9 +1168,12 @@
     }
 
     // Show album detail view
-    function showAlbumDetail(albumId) {
+    function showAlbumDetail(albumId, fromSection) {
         const album = albumsData.find(a => a.id === albumId);
         if (!album) return;
+        
+        // Store the previous section
+        previousSection = fromSection;
         
         document.getElementById('album-detail-image').src = album.cover;
         document.getElementById('album-detail-title').textContent = album.title;
@@ -1201,8 +1207,23 @@
         });
         
         // Switch to album detail view
-        document.querySelector('.albums-section').classList.remove('active');
+        if (fromSection === 'home') {
+            document.querySelector('.home-section').classList.remove('active');
+        } else {
+            document.querySelector('.albums-section').classList.remove('active');
+        }
         document.getElementById('albums-detail').classList.add('active');
+    }
+
+    // Close album detail view
+    function closeAlbumDetail() {
+        document.getElementById('albums-detail').classList.remove('active');
+        
+        if (previousSection === 'home') {
+            document.querySelector('.home-section').classList.add('active');
+        } else {
+            document.querySelector('.albums-section').classList.add('active');
+        }
     }
 
     // Open fullscreen player
@@ -1271,10 +1292,7 @@
             document.querySelector('.songs-section').classList.add('active');
         });
 
-        document.getElementById('close-album-detail').addEventListener('click', () => {
-            document.getElementById('albums-detail').classList.remove('active');
-            document.querySelector('.albums-section').classList.add('active');
-        });
+        document.getElementById('close-album-detail').addEventListener('click', closeAlbumDetail);
 
         // Fullscreen player controls
         fsCloseButton.addEventListener('click', closeFullscreenPlayer);
