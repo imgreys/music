@@ -798,10 +798,7 @@
     <div class="right-box" id="rightBox">
         <!-- Search Container -->
         <div class="search-container">
-            <form id="search-form">
-                <input type="text" name="query" class="search-bar" placeholder="Search..." required>
-                <button type="submit" style="display: none;">Search</button>
-            </form>
+            <input type="text" id="search-input" class="search-bar" placeholder="Search...">
         </div>
 
         <!-- Home Section -->
@@ -968,6 +965,7 @@
     const playerSong = document.getElementById('player-song');
     const playerArtist = document.getElementById('player-artist');
     const playerCover = document.getElementById('player-cover');
+    const searchInput = document.getElementById('search-input');
 
     // Fullscreen player elements
     const fullscreenPlayer = document.getElementById('fullscreen-player');
@@ -1126,11 +1124,13 @@
     }
 
     // Render all albums in the albums grid
-    function renderAlbums() {
+    function renderAlbums(filteredAlbums = null) {
         const albumsGrid = document.getElementById('albums-grid');
         albumsGrid.innerHTML = '';
         
-        albumsData.forEach(album => {
+        const albumsToRender = filteredAlbums || albumsData;
+        
+        albumsToRender.forEach(album => {
             const albumCard = document.createElement('div');
             albumCard.className = 'item-card';
             albumCard.dataset.id = album.id;
@@ -1250,6 +1250,37 @@
         fullscreenPlayer.classList.remove('active');
     }
 
+    // Search functionality - live as you type
+    function performSearch(query) {
+        query = query.toLowerCase().trim();
+        
+        if (!query) {
+            // If search is empty, show all content
+            if (document.querySelector('.songs-section').classList.contains('active')) {
+                renderSongs();
+            } else if (document.querySelector('.albums-section').classList.contains('active')) {
+                renderAlbums();
+            }
+            return;
+        }
+        
+        if (document.querySelector('.songs-section').classList.contains('active')) {
+            // Search in songs
+            const filteredSongs = songsData.filter(song => 
+                song.title.toLowerCase().includes(query) || 
+                song.artist.toLowerCase().includes(query)
+            );
+            renderSongs(filteredSongs);
+        } else if (document.querySelector('.albums-section').classList.contains('active')) {
+            // Search in albums
+            const filteredAlbums = albumsData.filter(album => 
+                album.title.toLowerCase().includes(query) || 
+                album.artist.toLowerCase().includes(query)
+            );
+            renderAlbums(filteredAlbums);
+        }
+    }
+
     // Setup event listeners
     function setupEventListeners() {
         // Navigation
@@ -1263,10 +1294,18 @@
                 
                 if (section === 'songs-section') {
                     document.querySelector('.songs-section').classList.add('active');
+                    // Clear search when switching sections
+                    searchInput.value = '';
+                    renderSongs();
                 } else if (section === 'albums-section') {
                     document.querySelector('.albums-section').classList.add('active');
+                    // Clear search when switching sections
+                    searchInput.value = '';
+                    renderAlbums();
                 } else {
                     document.querySelector('.home-section').classList.add('active');
+                    // Clear search when switching sections
+                    searchInput.value = '';
                 }
             });
         });
@@ -1277,6 +1316,9 @@
             document.querySelector('.songs').classList.add('active');
             document.querySelector('.home-section').classList.remove('active');
             document.querySelector('.songs-section').classList.add('active');
+            // Clear search when switching sections
+            searchInput.value = '';
+            renderSongs();
         });
 
         document.getElementById('view-all-albums').addEventListener('click', () => {
@@ -1284,6 +1326,9 @@
             document.querySelector('.albums').classList.add('active');
             document.querySelector('.home-section').classList.remove('active');
             document.querySelector('.albums-section').classList.add('active');
+            // Clear search when switching sections
+            searchInput.value = '';
+            renderAlbums();
         });
 
         // Back buttons
@@ -1319,22 +1364,9 @@
             audioPlayer.currentTime = percent * audioPlayer.duration;
         });
 
-        // Search functionality
-        document.getElementById('search-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const query = document.querySelector('.search-bar').value.toLowerCase();
-            
-            if (!query) {
-                renderSongs();
-                return;
-            }
-            
-            const filteredSongs = songsData.filter(song => 
-                song.title.toLowerCase().includes(query) || 
-                song.artist.toLowerCase().includes(query)
-            );
-            
-            renderSongs(filteredSongs);
+        // Search functionality - live as you type
+        searchInput.addEventListener('input', function() {
+            performSearch(this.value);
         });
     }
 
